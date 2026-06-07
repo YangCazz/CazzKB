@@ -7,23 +7,31 @@ kb:
   similarity_threshold: 0.65
 
 embedding:
+  # Available factories: openai, ollama
+  # If your API provider supports OpenAI-compatible embeddings, set base_url
   factory: "openai"
   model: "text-embedding-3-small"
   dimension: 1536
-  api_key: "${OPENAI_API_KEY}"
+  api_key: "${DEEPSEEK_API_KEY}"
   base_url: ""
 
 llm:
+  # DeepSeek via Anthropic-compatible endpoint
+  # Available factories: anthropic, deepseek (native OpenAI-compatible)
   factory: "anthropic"
-  model: "claude-sonnet-4-6"
-  api_key: "${ANTHROPIC_API_KEY}"
-  base_url: ""
+  model: "deepseek-v4-pro[1m]"
+  api_key: "${DEEPSEEK_API_KEY}"
+  base_url: "https://api.deepseek.com/anthropic"
   max_tokens: 4096
 
 retrieval:
   rrf_k: 60
   dense_weight: 0.7
-  enable_rerank: false
+  candidate_multiplier: 3    # RRF outputs top_k × N, reranker trims to top_k
+
+reranker:
+  factory: "none"            # bge | llm | none (set to "bge" after ollama pull bge-reranker)
+  model: "BAAI/bge-reranker-v2-m3"
 
 storage:
   chroma_path: "data/chroma"

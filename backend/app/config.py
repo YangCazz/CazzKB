@@ -34,10 +34,16 @@ class LLMConfig:
 
 
 @dataclass
+class RerankerConfig:
+    factory: str = "none"
+    model: str = ""
+
+
+@dataclass
 class RetrievalConfig:
     rrf_k: int = 60
     dense_weight: float = 0.7
-    enable_rerank: bool = False
+    candidate_multiplier: int = 3
 
 
 @dataclass
@@ -53,6 +59,7 @@ class AppConfig:
     embedding: EmbeddingConfig = field(default_factory=EmbeddingConfig)
     llm: LLMConfig = field(default_factory=LLMConfig)
     retrieval: RetrievalConfig = field(default_factory=RetrievalConfig)
+    reranker: RerankerConfig = field(default_factory=RerankerConfig)
     storage: StorageConfig = field(default_factory=StorageConfig)
 
 
@@ -107,6 +114,10 @@ def _merge_config(config: AppConfig, raw: dict):
         for k, v in raw["retrieval"].items():
             if hasattr(config.retrieval, k):
                 setattr(config.retrieval, k, v)
+    if "reranker" in raw:
+        for k, v in raw["reranker"].items():
+            if hasattr(config.reranker, k):
+                setattr(config.reranker, k, v)
     if "storage" in raw:
         for k, v in raw["storage"].items():
             if hasattr(config.storage, k):
