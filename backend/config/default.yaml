@@ -1,0 +1,31 @@
+# CazzKB default configuration
+kb:
+  name: "Default"
+  chunk_size: 512
+  chunk_overlap: 50
+  top_k: 8
+  similarity_threshold: 0.65
+
+embedding:
+  factory: "openai"
+  model: "text-embedding-3-small"
+  dimension: 1536
+  api_key: "${OPENAI_API_KEY}"
+  base_url: ""
+
+llm:
+  factory: "anthropic"
+  model: "claude-sonnet-4-6"
+  api_key: "${ANTHROPIC_API_KEY}"
+  base_url: ""
+  max_tokens: 4096
+
+retrieval:
+  rrf_k: 60
+  dense_weight: 0.7
+  enable_rerank: false
+
+storage:
+  chroma_path: "data/chroma"
+  db_path: "data/cazzkb.db"
+  upload_path: "data/uploads"
