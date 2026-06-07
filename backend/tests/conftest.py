@@ -1,5 +1,12 @@
 import pytest
 import os
+from pathlib import Path
+
+# Load local .env file if it exists (for API keys, etc.)
+_env_path = Path(__file__).resolve().parent.parent / ".env"
+if _env_path.exists():
+    from dotenv import load_dotenv
+    load_dotenv(_env_path, override=False)
 
 os.environ["CAZZKB_DB_PATH"] = ":memory:"
 
