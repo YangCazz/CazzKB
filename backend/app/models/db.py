@@ -10,7 +10,7 @@ DB_PATH = os.environ.get("CAZZKB_DB_PATH", "data/cazzkb.db")
 db = SqliteDatabase(DB_PATH, pragmas={
     "journal_mode": "wal",
     "foreign_keys": 1,
-})
+}, check_same_thread=False)
 
 
 class BaseModel(Model):
@@ -63,7 +63,7 @@ class Message(BaseModel):
 
 
 def init_db():
-    os.makedirs(os.path.dirname(DB_PATH) or ".", exist_ok=True)
+    if DB_PATH != ":memory:":
+        os.makedirs(os.path.dirname(DB_PATH) or ".", exist_ok=True)
     db.connect()
     db.create_tables([KnowledgeBase, Document, Chunk, Conversation, Message])
-    db.close()
