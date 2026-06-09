@@ -147,22 +147,9 @@ python scripts/ingest_blog.py
 
 ## 检索流水线
 
-```
-Query
-  ├── Chroma Dense ──── 16 candidates ──┐
-  ├── BM25  Sparse ──── 16 candidates ──┤
-  │                                      │
-  └── RRF 融合 (k=60, w=0.7) ── 24 candidates
-                                          │
-                         ┌────────────────┘
-                         ▼
-                   Reranker 精排 ──┬── BGE Cross-Encoder
-                                   ├── LLM 打分
-                                   └── None 透传
-                         │
-                         ▼
-                   8 精排结果 → RAG Prompt → LLM → SSE Stream
-```
+<p align="center">
+  <img src="images/Pipeline.png" alt="CazzKB Retrieval Pipeline" width="720">
+</p>
 
 ---
 
