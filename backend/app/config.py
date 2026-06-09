@@ -87,7 +87,11 @@ def _apply_env(obj):
 
 def load_config(path: str | None = None) -> AppConfig:
     if path is None:
-        path = os.environ.get("CAZZKB_CONFIG", "config/default.yaml")
+        path = os.environ.get("CAZZKB_CONFIG")
+        if not path:
+            # Resolve relative to backend/ directory (not cwd)
+            backend_dir = Path(__file__).resolve().parent.parent
+            path = str(backend_dir / "config" / "default.yaml")
     config = AppConfig()
     if Path(path).exists():
         with open(path) as f:

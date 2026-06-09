@@ -1,4 +1,12 @@
 from contextlib import asynccontextmanager
+from pathlib import Path
+
+from dotenv import load_dotenv
+
+# Load .env before anything else
+_load_dotenv_path = Path(__file__).resolve().parent.parent / ".env"
+load_dotenv(_load_dotenv_path)
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 

@@ -42,6 +42,7 @@ class SearchOrchestrator:
             )
 
     def index_chunks(self, kb_id: str, chunks: list[ChunkMetadata]):
+        """Add chunks to dense+sparse indexes. Call build_bm25() after all docs are ingested."""
         collection = self.get_or_create_collection(kb_id)
         texts = [c.content for c in chunks]
         ids = [f"{c.source_file}:{c.chunk_index}" for c in chunks]
@@ -55,6 +56,9 @@ class SearchOrchestrator:
         collection.add(ids=ids, embeddings=embeddings, documents=texts, metadatas=metadatas)
         for chunk_id, text in zip(ids, texts):
             self.bm25.add(chunk_id, text)
+
+    def build_bm25(self):
+        """Build BM25 index once after all chunks are added."""
         self.bm25.build()
 
     def search(self, kb_id: str, query: str, top_k: int | None = None) -> list[SearchResult]:

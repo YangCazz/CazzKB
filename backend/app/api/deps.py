@@ -23,6 +23,7 @@ def get_kb_manager() -> KBManager:
             model=config.embedding.model,
             api_key=config.embedding.api_key,
             base_url=config.embedding.base_url,
+            dimension=config.embedding.dimension,
         )
         _kb_manager = KBManager(config, embed)
     return _kb_manager

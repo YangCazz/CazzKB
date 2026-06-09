@@ -13,7 +13,7 @@ class AnthropicProvider(LLMProvider):
         import anthropic
         self.model = model
         self.max_tokens = max_tokens
-        client_args = {"api_key": api_key}
+        client_args = {"auth_token": api_key}
         if base_url:
             client_args["base_url"] = base_url
         self.client = anthropic.Anthropic(**client_args)
@@ -28,7 +28,10 @@ class AnthropicProvider(LLMProvider):
             with self.client.messages.stream(**kwargs) as s:
                 for event in s:
                     if event.type == "content_block_delta":
-                        text += event.delta.text
+                        try:
+                            text += event.delta.text
+                        except AttributeError:
+                            pass  # thinking delta
             return ChatResponse(content=text)
         else:
             resp = self.client.messages.create(**kwargs)
@@ -46,7 +49,10 @@ class AnthropicProvider(LLMProvider):
         with self.client.messages.stream(**kwargs) as s:
             for event in s:
                 if event.type == "content_block_delta":
-                    yield event.delta.text
+                    try:
+                        yield event.delta.text
+                    except AttributeError:
+                        pass  # skip thinking/redacted deltas
 
     def _convert_messages(self, messages: list[ChatMessage]) -> tuple[str, list[dict]]:
         system = ""

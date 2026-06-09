@@ -24,8 +24,24 @@ class Element:
     meta: dict = field(default_factory=dict)
 
 
+_JEKYLL_INCLUDE_RE = re.compile(r'\{%\s*include\s+[^%]*%\}')
+_JEKYLL_LIQUID_RE = re.compile(r'\{\{[^}]*\}\}')
+_CITE_TAG_RE = re.compile(r'<cite>[^<]*</cite>')
+_HTML_TAG_RE = re.compile(r'<[^>]+>')
+
+
+def _clean_jekyll(text: str) -> str:
+    """Strip Jekyll Liquid tags, cite tags, and raw HTML from markdown content."""
+    text = _JEKYLL_INCLUDE_RE.sub("", text)
+    text = _JEKYLL_LIQUID_RE.sub("", text)
+    text = _CITE_TAG_RE.sub("", text)
+    text = _HTML_TAG_RE.sub("", text)
+    return text
+
+
 def parse_markdown(text: str) -> list[Element]:
     """Parse markdown into semantic elements."""
+    text = _clean_jekyll(text)
     elements: list[Element] = []
     lines = text.split("\n")
     header_stack: list[str] = []
