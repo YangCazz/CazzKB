@@ -31,3 +31,6 @@ backend/data/
 
 # Ref (reference projects, not committed)
 ref/
+
+# Internal docs (not user-facing)
+docs/
