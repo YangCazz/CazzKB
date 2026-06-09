@@ -71,8 +71,37 @@ def list_chunks(kb_id: int, offset: int = 0, limit: int = 50,
 async def chat(kb_id: int, req: ChatRequest,
                manager: KBManager = Depends(get_kb_manager)):
     async def event_stream():
-        for token in manager.chat(kb_id, req.query, req.conversation_id):
-            yield f"data: {json.dumps({'token': token})}\n\n"
-        yield f"data: {json.dumps({'done': True})}\n\n"
+        for event in manager.chat(kb_id, req.query, req.conversation_id):
+            yield f"data: {event}\n\n"
+        yield f"data: {json.dumps({'type': 'done'})}\n\n"
 
     return StreamingResponse(event_stream(), media_type="text/event-stream")
+
+
+@router.get("/kb/{kb_id}/conversations")
+def list_conversations(kb_id: int, manager: KBManager = Depends(get_kb_manager)):
+    return manager.list_conversations(kb_id)
+
+
+@router.get("/conversations/{conv_id}")
+def get_conversation(conv_id: int, manager: KBManager = Depends(get_kb_manager)):
+    conv = manager.get_conversation(conv_id)
+    if conv is None:
+        raise HTTPException(status_code=404, detail="Conversation not found")
+    return conv
+
+
+@router.delete("/conversations/{conv_id}")
+def delete_conversation(conv_id: int, manager: KBManager = Depends(get_kb_manager)):
+    manager.delete_conversation(conv_id)
+    return {"status": "deleted"}
+
+
+class RenameRequest(BaseModel):
+    title: str
+
+
+@router.patch("/conversations/{conv_id}")
+def rename_conversation(conv_id: int, req: RenameRequest, manager: KBManager = Depends(get_kb_manager)):
+    manager.rename_conversation(conv_id, req.title)
+    return {"status": "ok"}

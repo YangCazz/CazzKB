@@ -17,6 +17,7 @@ interface ChatState {
   loadConversations: () => Promise<void>;
   selectConversation: (id: number) => Promise<void>;
   deleteConversation: (id: number) => Promise<void>;
+  renameConversation: (id: number, title: string) => Promise<void>;
   // Messages
   messages: Message[];
   isStreaming: boolean;
@@ -90,6 +91,11 @@ export const useStore = create<ChatState>((set, get) => ({
       activeConvId: s.activeConvId === id ? null : s.activeConvId,
       messages: s.activeConvId === id ? [] : s.messages,
     }));
+  },
+
+  renameConversation: async (id: number, title: string) => {
+    await api.renameConversation(id, title);
+    get().loadConversations();
   },
 
   clearChat: () => {

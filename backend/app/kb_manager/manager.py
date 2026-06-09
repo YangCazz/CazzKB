@@ -101,6 +101,51 @@ class KBManager:
 
         return doc
 
+    # --- Conversations ---
+
+    def list_conversations(self, kb_id: int) -> list[dict]:
+        convs = (Conversation
+                 .select()
+                 .where(Conversation.kb_id == kb_id)
+                 .order_by(Conversation.created_at.desc()))
+        return [{
+            "id": c.id,
+            "title": c.title,
+            "created_at": c.created_at.isoformat(),
+            "message_count": Message.select().where(Message.conversation_id == c.id).count(),
+        } for c in convs]
+
+    def get_conversation(self, conv_id: int) -> dict | None:
+        try:
+            c = Conversation.get_by_id(conv_id)
+            msgs = (Message
+                    .select()
+                    .where(Message.conversation_id == conv_id)
+                    .order_by(Message.created_at.asc()))
+            return {
+                "id": c.id,
+                "title": c.title,
+                "created_at": c.created_at.isoformat(),
+                "messages": [{"role": m.role, "content": m.content, "sources": m.sources_json, "created_at": m.created_at.isoformat()} for m in msgs],
+            }
+        except Exception:
+            return None
+
+    def delete_conversation(self, conv_id: int):
+        try:
+            c = Conversation.get_by_id(conv_id)
+            c.delete_instance(recursive=True)
+        except Exception:
+            pass
+
+    def rename_conversation(self, conv_id: int, title: str):
+        try:
+            c = Conversation.get_by_id(conv_id)
+            c.title = title[:120]
+            c.save()
+        except Exception:
+            pass
+
     # --- Chat ---
 
     def get_chunks(self, kb_id: int, offset: int = 0, limit: int = 50) -> list[dict]:
@@ -145,10 +190,12 @@ class KBManager:
             content=query,
         )
 
+        yield json.dumps({"type": "meta", "conversation_id": conversation_id})
+
         full_response = ""
         for token in self.llm.chat_stream(messages):
             full_response += token
-            yield token
+            yield json.dumps({"type": "token", "data": token})
 
         source_ids = [r.chunk_id for r in results]
         Message.create(
