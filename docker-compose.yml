@@ -6,6 +6,7 @@ services:
       dockerfile: Dockerfile.backend
     ports:
       - "8000:8000"
+    # Path relative to compose file: resolves to d:/CazzTech/.env (workspace root)
     env_file:
       - ../../.env
     volumes:
@@ -13,6 +14,12 @@ services:
       - kb_data:/app/data
     environment:
       - OLLAMA_HOST=${CAZZKB_OLLAMA_HOST:-http://localhost:11434}
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/docs')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
     networks:
       - cazztech
 
@@ -25,7 +32,8 @@ services:
     volumes:
       - ./frontend/src:/app/src
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
     networks:
       - cazztech
 
