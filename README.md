@@ -26,21 +26,9 @@
 
 ## 架构
 
-```
-┌──────────────────────────────────────────────────┐
-│           Web UI  ·  React 19 + Tailwind 3        │
-│           DeepSeek-GUI Design System               │
-├──────────────────────────────────────────────────┤
-│           API Layer  ·  FastAPI                   │
-│           REST + SSE streaming                    │
-├──────────┬───────────┬─────────────┬──────────────┤
-│  Parser  │ Retrieval │ Generation  │  KB Manager  │
-│  语义分块 │ 混合+重排  │ 多Provider   │  CRUD + 配置  │
-├──────────┴───────────┴─────────────┴──────────────┤
-│           Storage  ·  Chroma + SQLite + FS         │
-│           零外部依赖，全部本地运行                    │
-└──────────────────────────────────────────────────┘
-```
+<p align="center">
+  <img src="images/struct.png" alt="CazzKB Architecture" width="720">
+</p>
 
 ### 核心模块
 
