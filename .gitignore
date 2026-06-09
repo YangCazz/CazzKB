@@ -8,7 +8,7 @@ venv/
 
 # Node
 node_modules/
-frontend/dist/
+frontend-v2/dist/
 
 # Env
 .env
@@ -26,5 +26,5 @@ Thumbs.db
 data/chroma/
 *.db
 
-# Ref (too large, reference only)
+# Ref (reference projects, not committed)
 ref/
