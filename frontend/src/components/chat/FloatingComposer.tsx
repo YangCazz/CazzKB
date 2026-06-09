@@ -18,7 +18,7 @@ export function FloatingComposer({ onSend, disabled }: Props) {
   return (
     <div className="px-6 pb-5 pt-2" style={{ background: "var(--ds-bg-canvas)" }}>
       <form onSubmit={(e) => { e.preventDefault(); submit(); }}
-        className="flex items-end gap-3 max-w-[860px] mx-auto p-2.5 rounded-[22px] border shadow-composer transition-colors"
+        className="flex items-center gap-3 max-w-[860px] mx-auto p-2.5 rounded-[22px] border shadow-composer transition-colors"
         style={{ background: "var(--ds-surface-card)", borderColor: "var(--ds-border)" }}>
         <button type="button" disabled className="flex-shrink-0 h-9 w-9 rounded-full flex items-center justify-center opacity-50"
           style={{ background: "var(--ds-surface-subtle)", color: "var(--ds-text-faint)" }} title="模型切换 - 开发中">
@@ -29,8 +29,8 @@ export function FloatingComposer({ onSend, disabled }: Props) {
           onKeyDown={handleKeyDown}
           placeholder="输入你的问题... (Enter 发送, Shift+Enter 换行)"
           disabled={disabled} rows={1}
-          className="flex-1 resize-none bg-transparent text-[15px] leading-[1.58] font-medium outline-none disabled:opacity-30"
-          style={{ color: "var(--ds-text)" }} />
+          className="flex-1 resize-none bg-transparent text-[15px] font-medium outline-none disabled:opacity-30 py-2"
+          style={{ color: "var(--ds-text)", lineHeight: "1.4" }} />
         <button type="submit" disabled={disabled || !value.trim()}
           className="flex-shrink-0 h-9 w-9 rounded-full flex items-center justify-center transition-all disabled:opacity-30"
           style={{ background: value.trim() && !disabled ? "var(--ds-accent)" : "var(--ds-surface-subtle)", color: value.trim() && !disabled ? "white" : "var(--ds-text-faint)" }}>

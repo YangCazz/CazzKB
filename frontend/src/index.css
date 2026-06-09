@@ -1,0 +1,59 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ═══════════════════════════════════════════════
+   DeepSeek-GUI Design Tokens — light theme
+   ═══════════════════════════════════════════════ */
+:root {
+  --ds-bg-main: #f5f7fa;
+  --ds-bg-sidebar: #f4f7fb;
+  --ds-bg-canvas: #fbfcfe;
+  --ds-surface-card: rgba(255, 255, 255, 0.90);
+  --ds-surface-elevated: rgba(255, 255, 255, 0.98);
+  --ds-surface-subtle: #eef2f7;
+  --ds-surface-hover: rgba(15, 23, 42, 0.055);
+  --ds-border: rgba(15, 23, 42, 0.12);
+  --ds-border-muted: rgba(15, 23, 42, 0.08);
+  --ds-border-strong: rgba(15, 23, 42, 0.18);
+  --ds-text: #222222;
+  --ds-text-muted: #5f6878;
+  --ds-text-faint: #8a93a4;
+  --ds-text-placeholder: #949dad;
+  --ds-accent: #0088ff;
+  --ds-accent-soft: rgba(0, 136, 255, 0.14);
+  --ds-bubble-user: rgba(0, 0, 0, 0.06);
+  --ds-bubble-user-fg: #222222;
+  --ds-success: #128a4a;
+  --ds-success-soft: rgba(17, 185, 129, 0.14);
+  --ds-danger: #c92a2a;
+  --ds-danger-soft: rgba(239, 68, 68, 0.12);
+  --ds-selection: rgba(0, 136, 255, 0.18);
+  --ds-scrollbar-thumb: rgba(95, 104, 120, 0.22);
+  --ds-scrollbar-thumb-hover: rgba(95, 104, 120, 0.32);
+  --ds-shadow-composer: 0 18px 46px rgba(15, 23, 42, 0.10), 0 5px 16px rgba(15, 23, 42, 0.06);
+  --ds-shadow-card-soft: 0 10px 28px rgba(15, 23, 42, 0.06);
+  --ds-shadow-card-strong: 0 14px 36px rgba(15, 23, 42, 0.09);
+  --ds-code-bg: rgba(245, 247, 251, 0.96);
+  --ds-inline-code-bg: rgba(242, 244, 248, 0.92);
+  --ds-pre-bg: rgba(247, 249, 252, 0.96);
+  --ds-table-head-bg: rgba(244, 247, 252, 0.96);
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--ds-scrollbar-thumb); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--ds-scrollbar-thumb-hover); }
+
+/* Placeholder text non-selectable */
+::placeholder, textarea::placeholder, input::placeholder { user-select: none; -webkit-user-select: none; }
+
+/* Selection */
+::selection { background: var(--ds-selection); }
+
+/* No-select for UI chrome */
+button, h1, h2, h3, label, .ds-no-select { user-select: none; -webkit-user-select: none; }
+
+/* Highlight.js theme override */
+.hljs { background: transparent !important; padding: 0 !important; }

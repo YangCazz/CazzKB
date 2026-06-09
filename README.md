@@ -68,7 +68,7 @@ cp .env.example .env
 uvicorn app.main:app --reload --port 8000
 
 # 5. 启动前端 (terminal 2)
-cd frontend-v2
+cd frontend
 npm install
 npm run dev
 ```
@@ -134,7 +134,7 @@ CazzKB/
 │   ├── config/
 │   │   └── default.yaml   全局配置
 │   └── tests/
-├── frontend-v2/
+├── frontend/
 │   └── src/
 │       ├── components/
 │       │   ├── chat/      MessageTimeline · MessageBubble · FloatingComposer · ChatStarterGrid

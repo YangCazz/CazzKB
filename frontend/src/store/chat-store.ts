@@ -37,7 +37,16 @@ export const useStore = create<ChatState>((set, get) => ({
   abortRef: { current: null },
 
   loadKBs: async () => {
-    try { set({ kbs: await api.listKBs() }); } catch { /* */ }
+    try {
+      const kbs = await api.listKBs();
+      const currentId = get().selectedKbId;
+      if (kbs.length === 1 && currentId === null) {
+        set({ kbs, selectedKbId: kbs[0].id });
+        get().loadConversations();
+      } else {
+        set({ kbs });
+      }
+    } catch { /* */ }
   },
 
   selectKB: (id: number) => {
