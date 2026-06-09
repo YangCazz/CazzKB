@@ -22,9 +22,12 @@ frontend/dist/
 .DS_Store
 Thumbs.db
 
-# Data
-data/chroma/
+# Data (runtime, not committed)
+data/
+backend/data/
 *.db
+*.db-shm
+*.db-wal
 
 # Ref (reference projects, not committed)
 ref/
