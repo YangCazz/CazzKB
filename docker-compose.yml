@@ -1,0 +1,49 @@
+# CazzKB Docker Compose
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    ports:
+      - "8000:8000"
+    env_file:
+      - ../../.env
+    volumes:
+      - ./backend:/app
+      - kb_data:/app/data
+    environment:
+      - OLLAMA_HOST=${CAZZKB_OLLAMA_HOST:-http://localhost:11434}
+    networks:
+      - cazztech
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend/src:/app/src
+    depends_on:
+      - backend
+    networks:
+      - cazztech
+
+  ollama:
+    image: ollama/ollama:latest
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    profiles:
+      - ollama
+    networks:
+      - cazztech
+
+volumes:
+  kb_data:
+  ollama_data:
+
+networks:
+  cazztech:
+    name: cazztech

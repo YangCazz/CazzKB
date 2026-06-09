@@ -1,0 +1,14 @@
+# CazzKB .dockerignore
+__pycache__/
+*.pyc
+.venv/
+venv/
+.env
+.git/
+data/
+node_modules/
+dist/
+ref/
+docs/
+*.md
+!README.md
