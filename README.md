@@ -1,3 +1,7 @@
+<div align="right">
+  <a href="README.zh-CN.md">中文</a>
+</div>
+
 <div align="center">
 
 <img src="https://img.shields.io/badge/status-alpha-cyan?style=for-the-badge" alt="status">
@@ -29,11 +33,11 @@
 
 |  |  |
 |---|---|
-| **Semantic Chunking** | YAML frontmatter extraction · code/table/math protection · CJK token estimation |
+| **Semantic Chunking** | YAML frontmatter extraction • code/table/math protection • CJK token estimation |
 | **Hybrid Retrieval** | Dense vector + BM25 sparse → RRF fusion → Cross-Encoder reranker |
-| **Multi-Provider LLM** | DeepSeek / Anthropic via registry factory · SSE streaming |
-| **Local Embedding** | Ollama + bge-m3 · 1024-dim · zero API cost |
-| **Professional UI** | DeepSeek-GUI design system · conversation history · Markdown code highlighting · message editing |
+| **Multi-Provider LLM** | DeepSeek / Anthropic via registry factory • SSE streaming |
+| **Local Embedding** | Ollama + bge-m3 • 1024-dim • zero API cost |
+| **Professional UI** | DeepSeek-GUI design system • conversation history • Markdown code highlighting • message editing |
 
 </p>
 
@@ -71,7 +75,7 @@ Open `http://localhost:5173` and start chatting.
 
 ## Documentation
 
-Full setup guide, API reference, local deployment, and contribution guide → [GUIDE.md](GUIDE.md)
+Full guide → [GUIDE.md](GUIDE.md) | 完整指南 → [GUIDE.zh-CN.md](GUIDE.zh-CN.md)
 
 ## License
 
