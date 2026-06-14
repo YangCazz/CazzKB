@@ -31,6 +31,7 @@ class LLMConfig:
     api_key: str = ""
     base_url: str = ""
     max_tokens: int = 4096
+    thinking_budget_tokens: int = 0
 
 
 @dataclass

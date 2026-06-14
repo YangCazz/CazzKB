@@ -127,6 +127,7 @@ export const useStore = create<ChatState>((set, get) => ({
     set({ messages: [...msgs, assistantMsg], isStreaming: true });
 
     const startTime = Date.now();
+    let firstTokenRecorded = false;
     let streamContent = "";
     const ctrl = api.streamChat(
       selectedKbId, content, activeConvId,
@@ -135,7 +136,20 @@ export const useStore = create<ChatState>((set, get) => ({
         streamContent += token;
         set((s) => {
           const updatedMsgs = [...s.messages];
-          updatedMsgs[updatedMsgs.length - 1] = { ...updatedMsgs[updatedMsgs.length - 1], content: streamContent };
+          const updatedMsg: Message = { ...updatedMsgs[updatedMsgs.length - 1], content: streamContent };
+          if (!firstTokenRecorded) {
+            firstTokenRecorded = true;
+            updatedMsg.firstTokenTime = Math.round((Date.now() - startTime) / 100) / 10;
+          }
+          updatedMsgs[updatedMsgs.length - 1] = updatedMsg;
+          return { messages: updatedMsgs };
+        });
+      },
+      (thinking) => {
+        set((s) => {
+          const updatedMsgs = [...s.messages];
+          const prevThinking = updatedMsgs[updatedMsgs.length - 1].thinking || "";
+          updatedMsgs[updatedMsgs.length - 1] = { ...updatedMsgs[updatedMsgs.length - 1], thinking: prevThinking + thinking };
           return { messages: updatedMsgs };
         });
       },
@@ -162,6 +176,7 @@ export const useStore = create<ChatState>((set, get) => ({
     set((s) => ({ messages: [...s.messages, userMsg, assistantMsg], isStreaming: true }));
 
     const startTime = Date.now();
+    let firstTokenRecorded = false;
     let content = "";
 
     abortRef.current?.abort();
@@ -172,7 +187,20 @@ export const useStore = create<ChatState>((set, get) => ({
         content += token;
         set((s) => {
           const msgs = [...s.messages];
-          msgs[msgs.length - 1] = { ...msgs[msgs.length - 1], content };
+          const updatedMsg: Message = { ...msgs[msgs.length - 1], content };
+          if (!firstTokenRecorded) {
+            firstTokenRecorded = true;
+            updatedMsg.firstTokenTime = Math.round((Date.now() - startTime) / 100) / 10;
+          }
+          msgs[msgs.length - 1] = updatedMsg;
+          return { messages: msgs };
+        });
+      },
+      (thinking) => {
+        set((s) => {
+          const msgs = [...s.messages];
+          const prevThinking = msgs[msgs.length - 1].thinking || "";
+          msgs[msgs.length - 1] = { ...msgs[msgs.length - 1], thinking: prevThinking + thinking };
           return { messages: msgs };
         });
       },

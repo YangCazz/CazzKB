@@ -21,6 +21,7 @@ llm:
   api_key: "${DEEPSEEK_API_KEY}"
   base_url: "https://api.deepseek.com/anthropic"
   max_tokens: 4096
+  thinking_budget_tokens: 2048
 
 retrieval:
   rrf_k: 60

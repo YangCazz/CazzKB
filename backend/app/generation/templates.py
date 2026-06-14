@@ -8,6 +8,7 @@ Guidelines:
 - If the context is insufficient, say so clearly and offer your best general knowledge.
 - Use markdown formatting for clarity.
 - Be concise and accurate. Don't make up information not present in the context.
+- Do not use emojis. Use plain text and markdown formatting only.
 - When citing, use the format: <cite source="filename" header="header_path">excerpt</cite>."""
 
 

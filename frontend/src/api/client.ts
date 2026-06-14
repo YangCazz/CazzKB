@@ -45,6 +45,7 @@ export function streamChat(
   kbId: number, query: string, conversationId: number | null,
   onMeta: (convId: number) => void,
   onToken: (t: string) => void,
+  onThinking: (t: string) => void,
   onDone: () => void,
   onError: (e: Error) => void,
 ): AbortController {
@@ -67,6 +68,7 @@ export function streamChat(
           if (d.type === "done") return onDone();
           if (d.type === "meta" && d.conversation_id) onMeta(d.conversation_id);
           if (d.type === "token" && d.data) onToken(d.data);
+          if (d.type === "thinking" && d.data) onThinking(d.data);
         } catch { /* skip */ }
       }
     }

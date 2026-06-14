@@ -47,14 +47,24 @@ class SearchOrchestrator:
         texts = [c.content for c in chunks]
         ids = [f"{c.source_file}:{c.chunk_index}" for c in chunks]
         embeddings = self.embed_provider.embed(texts)
-        metadatas = [{
+
+        # Filter out empty embeddings (Ollama occasionally returns [] for some inputs)
+        valid = [(id_, emb, text, c) for id_, emb, text, c
+                 in zip(ids, embeddings, texts, chunks) if emb and len(emb) > 0]
+        if not valid:
+            return
+        valid_ids, valid_embeddings, valid_texts = zip(*[(v[0], v[1], v[2]) for v in valid])
+        valid_chunks = [v[3] for v in valid]
+        valid_metadatas = [{
             "source_file": c.source_file,
             "title": c.title,
             "header_path": c.header_path,
             "element_type": c.element_type,
-        } for c in chunks]
-        collection.add(ids=ids, embeddings=embeddings, documents=texts, metadatas=metadatas)
-        for chunk_id, text in zip(ids, texts):
+        } for c in valid_chunks]
+
+        collection.add(ids=list(valid_ids), embeddings=list(valid_embeddings),
+                       documents=list(valid_texts), metadatas=valid_metadatas)
+        for chunk_id, text in zip(valid_ids, valid_texts):
             self.bm25.add(chunk_id, text)
 
     def build_bm25(self):

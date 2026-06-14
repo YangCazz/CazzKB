@@ -31,6 +31,7 @@ class KBManager:
                 api_key=self.config.llm.api_key,
                 base_url=self.config.llm.base_url,
                 max_tokens=self.config.llm.max_tokens,
+                thinking_budget_tokens=self.config.llm.thinking_budget_tokens,
             )
         return self._llm
 
@@ -193,9 +194,12 @@ class KBManager:
         yield json.dumps({"type": "meta", "conversation_id": conversation_id})
 
         full_response = ""
-        for token in self.llm.chat_stream(messages):
-            full_response += token
-            yield json.dumps({"type": "token", "data": token})
+        for event in self.llm.chat_stream(messages):
+            if event.type == "thinking":
+                yield json.dumps({"type": "thinking", "data": event.data})
+            else:
+                full_response += event.data
+                yield json.dumps({"type": "token", "data": event.data})
 
         source_ids = [r.chunk_id for r in results]
         Message.create(

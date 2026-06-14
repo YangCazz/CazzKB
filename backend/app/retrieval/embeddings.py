@@ -78,18 +78,21 @@ class OllamaEmbedding(EmbeddingProvider):
         import requests, time
 
         def _embed_one(text: str) -> list[float]:
-            last_err = None
             for attempt in range(3):
                 try:
                     resp = requests.post(f"{self.base_url}/api/embeddings", json={
                         "model": self.model, "prompt": text,
                     }, timeout=30)
                     resp.raise_for_status()
-                    return resp.json()["embedding"]
-                except Exception as e:
-                    last_err = e
+                    emb = resp.json()["embedding"]
+                    if emb and len(emb) > 0:
+                        return emb
+                except Exception:
                     time.sleep(1 + attempt)
-            raise last_err
+            # Return zero vector as fallback for unembeddable text
+            if self._dimension:
+                return [0.0] * self._dimension
+            return []
 
         results = [None] * len(texts)
         with ThreadPoolExecutor(max_workers=1) as executor:
@@ -98,8 +101,11 @@ class OllamaEmbedding(EmbeddingProvider):
                 idx = futures[f]
                 results[idx] = f.result()
 
-        if not self._dimension and results[0]:
-            self._dimension = len(results[0])
+        if not self._dimension:
+            for r in results:
+                if r:
+                    self._dimension = len(r)
+                    break
         return results
 
     @property

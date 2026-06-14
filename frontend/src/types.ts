@@ -8,6 +8,6 @@ export interface Conversation {
 }
 
 export interface Message {
-  role: "user" | "assistant"; content: string;
-  responseTime?: number; sources?: string; created_at?: string;
+  role: "user" | "assistant"; content: string; thinking?: string;
+  responseTime?: number; firstTokenTime?: number; sources?: string; created_at?: string;
 }

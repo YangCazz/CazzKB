@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Iterator
 
 
@@ -15,6 +15,12 @@ class ChatResponse:
     usage: dict | None = None
 
 
+@dataclass
+class StreamEvent:
+    type: str       # "thinking" | "text"
+    data: str
+
+
 class LLMProvider(ABC):
     _FACTORY_NAME: str = ""
 
@@ -23,8 +29,8 @@ class LLMProvider(ABC):
         """Send a chat completion request."""
 
     @abstractmethod
-    def chat_stream(self, messages: list[ChatMessage]) -> Iterator[str]:
-        """Stream chat completion, yielding content delta strings."""
+    def chat_stream(self, messages: list[ChatMessage]) -> Iterator[StreamEvent]:
+        """Stream chat completion, yielding StreamEvent(type='thinking'|'text', data=...)."""
 
 
 _registry: dict[str, type[LLMProvider]] = {}
@@ -37,8 +43,10 @@ def register_llm(cls: type[LLMProvider]) -> type[LLMProvider]:
 
 
 def get_llm_provider(factory: str, model: str, api_key: str,
-                     base_url: str = "", max_tokens: int = 4096) -> LLMProvider:
+                     base_url: str = "", max_tokens: int = 4096,
+                     thinking_budget_tokens: int = 0) -> LLMProvider:
     cls = _registry.get(factory)
     if cls is None:
         raise ValueError(f"Unknown LLM factory: {factory}. Available: {list(_registry.keys())}")
-    return cls(model=model, api_key=api_key, base_url=base_url, max_tokens=max_tokens)
+    return cls(model=model, api_key=api_key, base_url=base_url, max_tokens=max_tokens,
+               thinking_budget_tokens=thinking_budget_tokens)

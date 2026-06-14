@@ -1,53 +1,92 @@
-import React from "react";
+import React, { useRef, useMemo } from "react";
 import type { Components } from "react-markdown";
 import { CopyButton } from "./CopyButton";
+import { MermaidBlock } from "./MermaidBlock";
 
-/**
- * Extract the raw text content from a ReactNode tree (recursively).
- * Used inside `pre` to get the code string for the copy button.
- */
+function hasMermaidChild(children: React.ReactNode): boolean {
+  return React.Children.toArray(children).some(
+    (c) => React.isValidElement(c) && (c.type as any)?.displayName === "MermaidBlock"
+  );
+}
+
 function extractCodeText(node: React.ReactNode): string {
   if (typeof node === "string") return node;
   if (typeof node === "number") return String(node);
   if (!node) return "";
-  // Single element
   if (React.isValidElement<{ children?: React.ReactNode }>(node)) {
     const kids = node.props.children;
     if (typeof kids === "string") return kids;
     return extractCodeText(kids);
   }
-  // Array of children
-  if (Array.isArray(node)) {
-    return node.map(extractCodeText).join("");
-  }
+  if (Array.isArray(node)) return node.map(extractCodeText).join("");
   return "";
 }
 
-export const sharedMdComponents: Components = {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  cite({ children, ...props }: any) {
+export interface CitationSource {
+  source: string;
+  header: string;
+  excerpt: string;
+}
+
+export function createCiteComponent(
+  sourcesRef: React.MutableRefObject<CitationSource[]>
+): Components["cite"] {
+  return function Cite({ children, ...props }: any) {
     const source = (props.source as string) || "";
     const header = (props.header as string) || "";
-    const body = (props.node?.children?.[0]?.value as string) || "";
-    return (
-      <span
-        className="inline-flex items-center gap-1 px-1.5 py-0.5 mx-0.5 rounded-md align-middle cursor-help"
-        title={`来源: ${source}${header ? ` > ${header}` : ""}`}
-        style={{ background: "var(--ds-accent-soft)", color: "var(--ds-accent)", fontSize: 12 }}
-      >
-        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-            d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"
-          />
-        </svg>
-        {body}
-        {source ? <span className="opacity-50 font-mono ml-0.5">{source}</span> : null}
-      </span>
-    );
-  },
+    const excerpt =
+      typeof children === "string"
+        ? children
+        : React.isValidElement(children)
+          ? extractCodeText(children)
+          : "";
 
+    const dedupeKey = `${source}::${excerpt.slice(0, 60)}`;
+    const existing = sourcesRef.current.findIndex(
+      (s) => `${s.source}::${s.excerpt.slice(0, 60)}` === dedupeKey
+    );
+    const num = existing >= 0 ? existing + 1 : (sourcesRef.current.push({ source, header, excerpt }), sourcesRef.current.length);
+
+    return (
+      <sup className="inline-flex items-center">
+        <span
+          className="inline-flex items-center justify-center min-w-[16px] h-[16px] px-[3px] rounded-full text-[10px] font-bold cursor-pointer select-none align-top transition-colors hover:opacity-80"
+          style={{
+            background: "var(--ds-accent)",
+            color: "#fff",
+          }}
+          title={`${source}${header ? ` › ${header}` : ""}\n\n"${excerpt}"`}
+          data-citation={num}
+        >
+          {num}
+        </span>
+      </sup>
+    );
+  };
+}
+
+export function useCitationComponents() {
+  const sourcesRef = useRef<CitationSource[]>([]);
+  sourcesRef.current = [];
+
+  const components: Components = useMemo(() => ({
+    ..._baseComponents,
+    cite: createCiteComponent(sourcesRef),
+  }), []);
+
+  return { components, sources: sourcesRef };
+}
+
+// --- base components (without cite — cite is injected dynamically) ---
+
+const _baseComponents: Components = {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   pre({ children }: any) {
+    if (hasMermaidChild(children)) {
+      return React.Children.toArray(children).find(
+        (c) => React.isValidElement(c) && (c.type as any)?.displayName === "MermaidBlock"
+      ) as React.ReactElement;
+    }
     const codeText = extractCodeText(children).replace(/\n$/, "");
     return (
       <div className="relative group my-3">
@@ -70,6 +109,10 @@ export const sharedMdComponents: Components = {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   code({ children, className, ...rest }: any) {
+    const codeText = String(children).replace(/\n$/, "");
+    if (className && className.includes("mermaid")) {
+      return <MermaidBlock code={codeText} />;
+    }
     if (!className) {
       return (
         <code
@@ -159,30 +202,20 @@ export const sharedMdComponents: Components = {
   },
 
   h1({ children }) {
-    return (
-      <h1 className="text-xl font-bold mt-6 mb-2 tracking-tight" style={{ color: "var(--ds-text)" }}>
-        {children}
-      </h1>
-    );
+    return <h1 className="text-xl font-bold mt-6 mb-2 tracking-tight" style={{ color: "var(--ds-text)" }}>{children}</h1>;
   },
 
   h2({ children }) {
     return (
-      <h2
-        className="text-lg font-semibold mt-5 mb-2 pb-1.5 border-b tracking-tight"
-        style={{ color: "var(--ds-text)", borderColor: "var(--ds-border-muted)" }}
-      >
+      <h2 className="text-lg font-semibold mt-5 mb-2 pb-1.5 border-b tracking-tight"
+        style={{ color: "var(--ds-text)", borderColor: "var(--ds-border-muted)" }}>
         {children}
       </h2>
     );
   },
 
   h3({ children }) {
-    return (
-      <h3 className="text-base font-semibold mt-4 mb-1.5" style={{ color: "var(--ds-text)" }}>
-        {children}
-      </h3>
-    );
+    return <h3 className="text-base font-semibold mt-4 mb-1.5" style={{ color: "var(--ds-text)" }}>{children}</h3>;
   },
 
   p({ children }) {
