@@ -1,10 +1,11 @@
 import json
+import datetime
 from pathlib import Path
 from typing import Iterator
 
 from app.config import AppConfig
 from app.models.db import (
-    KnowledgeBase, Document, Chunk, Conversation, Message,
+    KnowledgeBase, Document, Chunk, Conversation, Message, Artifact,
 )
 from app.ingestion.chunker import SemanticChunker, ChunkMetadata
 from app.retrieval.embeddings import EmbeddingProvider
@@ -98,9 +99,78 @@ class KBManager:
         self.search.index_chunks(str(kb_id), chunks)
 
         kb.chunk_count = kb.chunk_count + len(chunks)
+        kb.updated_at = doc.ingested_at
         kb.save()
 
         return doc
+
+    # --- Notebook-style sources ---
+
+    def list_sources(self, kb_id: int) -> list[dict]:
+        sources = (Document
+                   .select()
+                   .where(Document.kb_id == kb_id)
+                   .order_by(Document.ingested_at.desc()))
+        return [{
+            "id": s.id,
+            "filename": s.filename,
+            "title": s.title or s.filename,
+            "source_type": s.source_type,
+            "summary": s.summary,
+            "enabled": bool(s.enabled),
+            "chunk_count": s.chunk_count,
+            "source_date": s.source_date,
+            "categories": json.loads(s.categories or "[]"),
+            "tags": json.loads(s.tags or "[]"),
+            "ingested_at": s.ingested_at.isoformat(),
+        } for s in sources]
+
+    def get_source(self, source_id: int) -> dict | None:
+        try:
+            source = Document.get_by_id(source_id)
+            chunks = (Chunk
+                      .select()
+                      .where(Chunk.document_id == source_id)
+                      .order_by(Chunk.chunk_index.asc()))
+            return {
+                "id": source.id,
+                "kb_id": source.kb_id,
+                "filename": source.filename,
+                "title": source.title or source.filename,
+                "source_type": source.source_type,
+                "summary": source.summary,
+                "enabled": bool(source.enabled),
+                "source_date": source.source_date,
+                "categories": json.loads(source.categories or "[]"),
+                "tags": json.loads(source.tags or "[]"),
+                "chunk_count": source.chunk_count,
+                "ingested_at": source.ingested_at.isoformat(),
+                "chunks": [{
+                    "id": c.id,
+                    "chunk_index": c.chunk_index,
+                    "content": c.content,
+                    "header_path": c.header_path,
+                    "element_type": c.element_type,
+                    "metadata": json.loads(c.metadata_json or "{}"),
+                } for c in chunks],
+            }
+        except Exception:
+            return None
+
+    def update_source(self, source_id: int, title: str | None = None,
+                      summary: str | None = None, enabled: bool | None = None) -> dict | None:
+        try:
+            source = Document.get_by_id(source_id)
+            if title is not None:
+                source.title = title[:255]
+            if summary is not None:
+                source.summary = summary
+            if enabled is not None:
+                source.enabled = 1 if enabled else 0
+            source.save()
+            return self.get_source(source_id)
+        except Exception:
+            return None
 
     # --- Conversations ---
 
@@ -144,6 +214,71 @@ class KBManager:
             c = Conversation.get_by_id(conv_id)
             c.title = title[:120]
             c.save()
+        except Exception:
+            pass
+
+    # --- Notebook-style artifacts ---
+
+    def list_artifacts(self, kb_id: int) -> list[dict]:
+        artifacts = (Artifact
+                     .select()
+                     .where(Artifact.kb_id == kb_id)
+                     .order_by(Artifact.updated_at.desc()))
+        return [{
+            "id": a.id,
+            "title": a.title,
+            "artifact_type": a.artifact_type,
+            "content": a.content,
+            "metadata": json.loads(a.metadata_json or "{}"),
+            "created_at": a.created_at.isoformat(),
+            "updated_at": a.updated_at.isoformat(),
+        } for a in artifacts]
+
+    def create_artifact(self, kb_id: int, title: str, artifact_type: str,
+                        content: str, metadata: dict | None = None) -> dict:
+        kb = self.get_kb(kb_id)
+        now = datetime.datetime.utcnow()
+        artifact = Artifact.create(
+            kb=kb,
+            title=title[:255],
+            artifact_type=artifact_type,
+            content=content,
+            metadata_json=json.dumps(metadata or {}),
+            created_at=now,
+            updated_at=now,
+        )
+        kb.updated_at = now
+        kb.save()
+        return {
+            "id": artifact.id,
+            "title": artifact.title,
+            "artifact_type": artifact.artifact_type,
+            "content": artifact.content,
+            "metadata": json.loads(artifact.metadata_json or "{}"),
+            "created_at": artifact.created_at.isoformat(),
+            "updated_at": artifact.updated_at.isoformat(),
+        }
+
+    def get_artifact(self, artifact_id: int) -> dict | None:
+        try:
+            artifact = Artifact.get_by_id(artifact_id)
+            return {
+                "id": artifact.id,
+                "kb_id": artifact.kb_id,
+                "title": artifact.title,
+                "artifact_type": artifact.artifact_type,
+                "content": artifact.content,
+                "metadata": json.loads(artifact.metadata_json or "{}"),
+                "created_at": artifact.created_at.isoformat(),
+                "updated_at": artifact.updated_at.isoformat(),
+            }
+        except Exception:
+            return None
+
+    def delete_artifact(self, artifact_id: int):
+        try:
+            artifact = Artifact.get_by_id(artifact_id)
+            artifact.delete_instance()
         except Exception:
             pass
 

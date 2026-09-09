@@ -1,7 +1,7 @@
 import datetime
 from peewee import (
     SqliteDatabase, Model, CharField, TextField, IntegerField,
-    FloatField, BooleanField, DateTimeField, ForeignKeyField,
+    DateTimeField, ForeignKeyField,
 )
 import os
 
@@ -31,6 +31,9 @@ class Document(BaseModel):
     kb = ForeignKeyField(KnowledgeBase, backref="documents", on_delete="CASCADE")
     filename = CharField()
     title = CharField(default="")
+    source_type = CharField(default="markdown")  # markdown|pdf|docx|web|audio|image
+    summary = TextField(default="")
+    enabled = IntegerField(default=1)            # SQLite-friendly bool
     source_date = CharField(default="")       # from frontmatter or filename
     categories = TextField(default="[]")       # JSON array
     tags = TextField(default="[]")             # JSON array
@@ -62,8 +65,41 @@ class Message(BaseModel):
     created_at = DateTimeField(default=datetime.datetime.utcnow)
 
 
+class Artifact(BaseModel):
+    kb = ForeignKeyField(KnowledgeBase, backref="artifacts", on_delete="CASCADE")
+    title = CharField()
+    artifact_type = CharField(default="note")    # note|briefing|faq|study_guide|timeline|mind_map
+    content = TextField()
+    metadata_json = TextField(default="{}")
+    created_at = DateTimeField(default=datetime.datetime.utcnow)
+    updated_at = DateTimeField(default=datetime.datetime.utcnow)
+
+
+def _column_exists(table: str, column: str) -> bool:
+    rows = db.execute_sql(f"PRAGMA table_info({table})").fetchall()
+    return any(row[1] == column for row in rows)
+
+
+def _ensure_column(table: str, column: str, ddl: str):
+    if not _column_exists(table, column):
+        db.execute_sql(f"ALTER TABLE {table} ADD COLUMN {column} {ddl}")
+
+
+def _ensure_schema():
+    """Add lightweight columns for existing local databases.
+
+    Peewee creates missing tables, but it does not migrate existing ones. These
+    additive checks keep old CazzKB databases usable during the Notebook-style
+    transition.
+    """
+    _ensure_column("document", "source_type", "VARCHAR(255) DEFAULT 'markdown'")
+    _ensure_column("document", "summary", "TEXT DEFAULT ''")
+    _ensure_column("document", "enabled", "INTEGER DEFAULT 1")
+
+
 def init_db():
     if DB_PATH != ":memory:":
         os.makedirs(os.path.dirname(DB_PATH) or ".", exist_ok=True)
     db.connect()
-    db.create_tables([KnowledgeBase, Document, Chunk, Conversation, Message])
+    db.create_tables([KnowledgeBase, Document, Chunk, Conversation, Message, Artifact])
+    _ensure_schema()

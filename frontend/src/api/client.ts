@@ -1,4 +1,13 @@
-import type { KnowledgeBase, Conversation, Message } from "../types";
+import type {
+  Artifact,
+  Conversation,
+  KnowledgeBase,
+  Message,
+  Notebook,
+  Source,
+  SourceDetail,
+  UploadedDocument,
+} from "../types";
 
 const BASE = "/api";
 
@@ -13,10 +22,59 @@ export async function createKB(name: string, desc = ""): Promise<KnowledgeBase> 
 export async function deleteKB(id: number): Promise<void> {
   await fetch(`${BASE}/kb/${id}`, { method: "DELETE" });
 }
-export async function uploadDocument(kbId: number, file: File): Promise<Document> {
+export async function uploadDocument(kbId: number, file: File): Promise<UploadedDocument> {
   const fd = new FormData(); fd.append("file", file);
   const r = await fetch(`${BASE}/kb/${kbId}/upload`, { method: "POST", body: fd });
   return r.json();
+}
+
+// --- Notebook aliases ---
+export async function listNotebooks(): Promise<Notebook[]> {
+  const r = await fetch(`${BASE}/notebooks`); return r.json();
+}
+export async function createNotebook(name: string, desc = ""): Promise<Notebook> {
+  const r = await fetch(`${BASE}/notebooks`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name, description: desc }) });
+  return r.json();
+}
+
+// --- Sources ---
+export async function listSources(kbId: number): Promise<Source[]> {
+  const r = await fetch(`${BASE}/kb/${kbId}/sources`); return r.json();
+}
+export async function getSource(id: number): Promise<SourceDetail> {
+  const r = await fetch(`${BASE}/sources/${id}`);
+  if (!r.ok) throw new Error("Source not found");
+  return r.json();
+}
+export async function updateSource(id: number, patch: Partial<Pick<Source, "title" | "summary" | "enabled">>): Promise<SourceDetail> {
+  const r = await fetch(`${BASE}/sources/${id}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(patch),
+  });
+  if (!r.ok) throw new Error("Source not found");
+  return r.json();
+}
+
+// --- Artifacts ---
+export async function listArtifacts(kbId: number): Promise<Artifact[]> {
+  const r = await fetch(`${BASE}/kb/${kbId}/artifacts`); return r.json();
+}
+export async function createArtifact(kbId: number, artifact: Pick<Artifact, "title" | "artifact_type" | "content"> & { metadata?: Record<string, unknown> }): Promise<Artifact> {
+  const r = await fetch(`${BASE}/kb/${kbId}/artifacts`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ ...artifact, metadata: artifact.metadata ?? {} }),
+  });
+  return r.json();
+}
+export async function getArtifact(id: number): Promise<Artifact> {
+  const r = await fetch(`${BASE}/artifacts/${id}`);
+  if (!r.ok) throw new Error("Artifact not found");
+  return r.json();
+}
+export async function deleteArtifact(id: number): Promise<void> {
+  await fetch(`${BASE}/artifacts/${id}`, { method: "DELETE" });
 }
 
 // --- Conversations ---

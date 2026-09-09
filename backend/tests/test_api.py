@@ -54,8 +54,68 @@ def test_create_and_list_kb(client):
     assert len(kbs) >= 1
 
 
+def test_notebook_aliases(client):
+    resp = client.post("/api/notebooks", json={"name": "Research Notebook", "description": "notes"})
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["name"] == "Research Notebook"
+
+    resp = client.get("/api/notebooks")
+    assert resp.status_code == 200
+    notebooks = resp.json()
+    assert any(n["name"] == "Research Notebook" for n in notebooks)
+
+
 def test_get_kb_404(client):
     resp = client.get("/api/kb/99999")
+    assert resp.status_code == 404
+
+
+def test_empty_sources_for_new_kb(client):
+    resp = client.post("/api/kb", json={"name": "Source Test"})
+    kb_id = resp.json()["id"]
+
+    resp = client.get(f"/api/kb/{kb_id}/sources")
+    assert resp.status_code == 200
+    assert resp.json() == []
+
+
+def test_source_404(client):
+    resp = client.get("/api/sources/99999")
+    assert resp.status_code == 404
+
+
+def test_artifact_crud(client):
+    resp = client.post("/api/kb", json={"name": "Artifact Test"})
+    kb_id = resp.json()["id"]
+
+    resp = client.post(
+        f"/api/kb/{kb_id}/artifacts",
+        json={
+            "title": "Briefing",
+            "artifact_type": "briefing",
+            "content": "A source-grounded summary.",
+            "metadata": {"source_ids": []},
+        },
+    )
+    assert resp.status_code == 200
+    artifact = resp.json()
+    assert artifact["title"] == "Briefing"
+    assert artifact["artifact_type"] == "briefing"
+    assert artifact["metadata"]["source_ids"] == []
+
+    resp = client.get(f"/api/kb/{kb_id}/artifacts")
+    assert resp.status_code == 200
+    assert len(resp.json()) == 1
+
+    resp = client.get(f"/api/artifacts/{artifact['id']}")
+    assert resp.status_code == 200
+    assert resp.json()["content"] == "A source-grounded summary."
+
+    resp = client.delete(f"/api/artifacts/{artifact['id']}")
+    assert resp.status_code == 200
+
+    resp = client.get(f"/api/artifacts/{artifact['id']}")
     assert resp.status_code == 404
 
 
