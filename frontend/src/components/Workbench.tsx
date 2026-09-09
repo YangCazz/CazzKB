@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { useStore } from "../store/chat-store";
 import { Sidebar } from "./Sidebar";
 import { ChatView } from "./ChatView";
+import { NotebookPanel } from "./NotebookPanel";
 
 export function Workbench() {
   const loadKBs = useStore((s) => s.loadKBs);
@@ -13,6 +14,7 @@ export function Workbench() {
       <div className="flex-1 flex flex-col min-w-0">
         <ChatView />
       </div>
+      <NotebookPanel />
     </div>
   );
 }

@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { KnowledgeBase, Conversation, Message } from "../types";
+import type { Artifact, Conversation, KnowledgeBase, Message, Source } from "../types";
 import * as api from "../api/client";
 
 interface ChatState {
@@ -11,6 +11,11 @@ interface ChatState {
   createKB: (name: string) => Promise<void>;
   deleteKB: (id: number) => Promise<void>;
   uploadDoc: (file: File) => Promise<void>;
+  // Notebook sources & artifacts
+  sources: Source[];
+  artifacts: Artifact[];
+  loadNotebookAssets: () => Promise<void>;
+  createArtifact: (artifact: Pick<Artifact, "title" | "artifact_type" | "content"> & { metadata?: Record<string, unknown> }) => Promise<void>;
   // Conversations
   conversations: Conversation[];
   activeConvId: number | null;
@@ -30,6 +35,8 @@ interface ChatState {
 export const useStore = create<ChatState>((set, get) => ({
   kbs: [],
   selectedKbId: null,
+  sources: [],
+  artifacts: [],
   conversations: [],
   activeConvId: null,
   messages: [],
@@ -50,8 +57,9 @@ export const useStore = create<ChatState>((set, get) => ({
   },
 
   selectKB: (id: number) => {
-    set({ selectedKbId: id, activeConvId: null, messages: [], conversations: [] });
+    set({ selectedKbId: id, activeConvId: null, messages: [], conversations: [], sources: [], artifacts: [] });
     get().loadConversations();
+    get().loadNotebookAssets();
   },
 
   createKB: async (name: string) => {
@@ -66,6 +74,8 @@ export const useStore = create<ChatState>((set, get) => ({
       selectedKbId: s.selectedKbId === id ? null : s.selectedKbId,
       activeConvId: s.selectedKbId === id ? null : s.activeConvId,
       messages: s.selectedKbId === id ? [] : s.messages,
+      sources: s.selectedKbId === id ? [] : s.sources,
+      artifacts: s.selectedKbId === id ? [] : s.artifacts,
     }));
   },
 
@@ -74,6 +84,28 @@ export const useStore = create<ChatState>((set, get) => ({
     if (!kbId) return;
     await api.uploadDocument(kbId, file);
     get().loadKBs();
+    get().loadNotebookAssets();
+  },
+
+  loadNotebookAssets: async () => {
+    const kbId = get().selectedKbId;
+    if (!kbId) { set({ sources: [], artifacts: [] }); return; }
+    try {
+      const [sources, artifacts] = await Promise.all([
+        api.listSources(kbId),
+        api.listArtifacts(kbId),
+      ]);
+      set({ sources, artifacts });
+    } catch {
+      set({ sources: [], artifacts: [] });
+    }
+  },
+
+  createArtifact: async (artifact) => {
+    const kbId = get().selectedKbId;
+    if (!kbId) return;
+    await api.createArtifact(kbId, artifact);
+    get().loadNotebookAssets();
   },
 
   loadConversations: async () => {
