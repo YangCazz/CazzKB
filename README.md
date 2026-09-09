@@ -19,6 +19,8 @@
 
 **CazzKB** is a lightweight, self-hosted knowledge base system. Upload Markdown documents and talk to your knowledge in natural language. All data stays on your machine — zero cloud dependencies.
 
+It is designed as a practical RAG workbench rather than a thin chat wrapper: document parsing, chunking, retrieval fusion, reranking, streaming generation, and a polished React interface are all kept in one self-contained repo.
+
 <br>
 
 <p align="center">
@@ -40,6 +42,20 @@
 | **Professional UI** | DeepSeek-GUI design system • conversation history • Markdown code highlighting • message editing |
 
 </p>
+
+## Typical Workflow
+
+1. Import Markdown notes, blog posts, technical references, or project documentation.
+2. Parse frontmatter, preserve code/table/math blocks, and split content into semantic chunks.
+3. Build local embeddings with Ollama and `bge-m3`, then combine vector search with BM25.
+4. Rerank candidate chunks and stream answers from the configured LLM provider.
+5. Review answers in a chat UI with source-aware context and editable conversation history.
+
+## What This Shows
+
+- Full-stack AI product engineering: FastAPI retrieval backend + React 19 workbench UI.
+- Retrieval quality beyond basic vector search: BM25, RRF fusion, and Cross-Encoder reranking.
+- Local-first system design for private knowledge workflows and reproducible experiments.
 
 <br>
 
